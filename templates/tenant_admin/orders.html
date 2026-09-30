@@ -1,0 +1,85 @@
+{% extends "tenant_admin/base_tenant_admin.html" %}
+
+{% block page_title %}Pedidos | {{ tenant.name }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-receipt text-indigo-600"></i> Gestión de Pedidos y Ventas
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Supervisa y actualiza el estado de los pedidos recibidos en tu tienda.</p>
+        </div>
+
+        <!-- Filter by Status -->
+        <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 font-semibold">Filtrar:</span>
+            <a href="{% url 'tenant_admin_orders' slug=tenant.slug %}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all {% if not status_filter %}bg-slate-900 text-white{% else %}bg-white text-slate-600 border border-slate-200{% endif %}">
+                Todos
+            </a>
+            {% for st_val, st_lbl in status_choices %}
+            <a href="{% url 'tenant_admin_orders' slug=tenant.slug %}?status={{ st_val }}" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all {% if status_filter == st_val %}bg-slate-900 text-white{% else %}bg-white text-slate-600 border border-slate-200{% endif %}">
+                {{ st_lbl }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        {% if orders %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                    <tr>
+                        <th class="py-4 px-6">ID</th>
+                        <th class="py-4 px-6">Cliente</th>
+                        <th class="py-4 px-6">Fecha</th>
+                        <th class="py-4 px-6 text-right">Total</th>
+                        <th class="py-4 px-6 text-center">Estado</th>
+                        <th class="py-4 px-6 text-right">Detalle</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for ord in orders %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6 font-mono font-bold text-indigo-600">#{{ ord.id }}</td>
+                        <td class="py-4 px-6">
+                            <span class="font-bold text-slate-900 block">{{ ord.customer_name }}</span>
+                            <span class="text-slate-400 text-[11px]">{{ ord.customer_email }}</span>
+                        </td>
+                        <td class="py-4 px-6 text-slate-500">{{ ord.created_at|date:"d M Y, H:i" }}</td>
+                        <td class="py-4 px-6 text-right font-black text-slate-900 text-sm">
+                            {{ tenant.currency_symbol }}{{ ord.total_amount }}
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold
+                                {% if ord.status == 'PENDING' %}bg-amber-100 text-amber-800
+                                {% elif ord.status == 'PAID' %}bg-emerald-100 text-emerald-800
+                                {% elif ord.status == 'PROCESSING' %}bg-sky-100 text-sky-800
+                                {% elif ord.status == 'SHIPPED' %}bg-indigo-100 text-indigo-800
+                                {% elif ord.status == 'DELIVERED' %}bg-blue-100 text-blue-800
+                                {% else %}bg-rose-100 text-rose-800{% endif %}">
+                                {{ ord.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <a href="{% url 'tenant_admin_order_detail' slug=tenant.slug order_id=ord.id %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition-colors">
+                                <i class="fa-solid fa-eye text-xs"></i> Ver Pedido
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-16 text-slate-400 text-xs">
+            <i class="fa-solid fa-receipt text-3xl mb-2 text-slate-300"></i>
+            <p>No se encontraron pedidos con el criterio seleccionado.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

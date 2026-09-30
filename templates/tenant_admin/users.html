@@ -1,0 +1,179 @@
+{% extends "tenant_admin/base_tenant_admin.html" %}
+
+{% block page_title %}Gestión de Usuarios | {{ tenant.name }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-users-gear text-indigo-600"></i> Usuarios y Colaboradores de la Tienda
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">
+                Como Administrador de <strong>{{ tenant.name }}</strong>, puedes crear nuevos usuarios, asignarles roles de administración o ventas, y gestionar sus permisos.
+            </p>
+        </div>
+
+        <button onclick="document.getElementById('createUserModal').classList.remove('hidden')" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all">
+            <i class="fa-solid fa-user-plus"></i> Crear Nuevo Usuario
+        </button>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Equipo Registrado ({{ memberships|length }})</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                    <tr>
+                        <th class="py-4 px-6">Usuario</th>
+                        <th class="py-4 px-6">Nombre Completo</th>
+                        <th class="py-4 px-6">Correo</th>
+                        <th class="py-4 px-6 text-center">Rol en la Tienda</th>
+                        <th class="py-4 px-6 text-center">Estado</th>
+                        <th class="py-4 px-6 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for m in memberships %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs border border-slate-200">
+                                    {{ m.user.username|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-900">{{ m.user.username }}</span>
+                                    {% if m.user == request.user %}
+                                    <span class="ml-1 text-[10px] bg-indigo-50 text-indigo-700 font-bold px-1.5 py-0.5 rounded">Tú</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 font-medium text-slate-700">
+                            {{ m.user.get_full_name|default:"-" }}
+                        </td>
+                        <td class="py-4 px-6 text-slate-500">
+                            {{ m.user.email|default:"Sin email" }}
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            {% if m.role == 'ADMIN' %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <i class="fa-solid fa-crown text-[10px]"></i> Administrador
+                            </span>
+                            {% elif m.role == 'STAFF' %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                <i class="fa-solid fa-id-badge text-[10px]"></i> Staff / Ventas
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700">
+                                Cliente
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            {% if m.is_active %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                Activo
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                                Inactivo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <!-- Editar Rol y Datos -->
+                                <a href="{% url 'tenant_admin_user_edit' slug=tenant.slug membership_id=m.id %}" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Editar Rol y Datos">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <!-- Reset Password -->
+                                <a href="{% url 'tenant_admin_user_password' slug=tenant.slug membership_id=m.id %}" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Cambiar Contraseña">
+                                    <i class="fa-solid fa-key"></i>
+                                </a>
+                                <!-- Eliminar Membresía -->
+                                {% if m.user != request.user %}
+                                <a href="{% url 'tenant_admin_user_delete' slug=tenant.slug membership_id=m.id %}" onclick="return confirm('¿Quitar al usuario {{ m.user.username }} de la tienda {{ tenant.name }}?')" class="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors" title="Quitar de la tienda">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal: Crear Usuario de la Tienda -->
+<div id="createUserModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative text-slate-800">
+        <button onclick="document.getElementById('createUserModal').classList.add('hidden')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Crear Usuario para {{ tenant.name }}</h3>
+                <p class="text-xs text-slate-500">Asigna credenciales y el rol en tu negocio.</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'tenant_admin_user_create' slug=tenant.slug %}" class="space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre de Usuario *</label>
+                {{ form.username }}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Correo Electrónico *</label>
+                {{ form.email }}
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre</label>
+                    {{ form.first_name }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Apellido</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Rol en el Negocio *</label>
+                {{ form.role }}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Contraseña Inicial *</label>
+                {{ form.password }}
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="button" onclick="document.getElementById('createUserModal').classList.add('hidden')" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all">
+                    Guardar Usuario
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

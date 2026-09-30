@@ -1,0 +1,212 @@
+{% extends "tenant_admin/base_tenant_admin.html" %}
+
+{% block page_title %}Tablero de Control | {{ tenant.name }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-8">
+    
+    <!-- Welcome Header -->
+    <div class="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-300">Panel del Negocio</span>
+            <h2 class="text-2xl sm:text-3xl font-black mt-1">Bienvenido a la administración de {{ tenant.name }}</h2>
+            <p class="text-sm text-slate-300 mt-2 max-w-xl">
+                Monitorea en tiempo real las ventas exclusivas de tu tienda, procesa tus pedidos y gestiona el personal de tu negocio.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'tenant_admin_product_create' slug=tenant.slug %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs bg-white text-slate-900 hover:bg-slate-100 transition-all shadow-md">
+                <i class="fa-solid fa-plus text-indigo-600"></i> Nuevo Producto
+            </a>
+            <a href="{% url 'storefront_view' slug=tenant.slug %}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs bg-indigo-700/50 hover:bg-indigo-700 text-white border border-indigo-500/30 transition-all">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver Tienda
+            </a>
+        </div>
+    </div>
+
+    <!-- Store KPIs -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                <span>Ventas Totales</span>
+                <i class="fa-solid fa-chart-line text-emerald-500 text-base"></i>
+            </div>
+            <div class="mt-3 text-2xl sm:text-3xl font-black text-slate-900">
+                {{ tenant.currency_symbol }}{{ total_sales|floatformat:2 }}
+            </div>
+            <div class="mt-1 text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-arrow-trend-up"></i> Ingresos del tenant
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                <span>Pedidos Totales</span>
+                <i class="fa-solid fa-receipt text-indigo-500 text-base"></i>
+            </div>
+            <div class="mt-3 text-2xl sm:text-3xl font-black text-slate-900">
+                {{ orders_count }}
+            </div>
+            <div class="mt-1 text-xs text-slate-500">
+                {{ pending_orders }} pendientes de entrega
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                <span>Catálogo Activo</span>
+                <i class="fa-solid fa-boxes-stacked text-violet-500 text-base"></i>
+            </div>
+            <div class="mt-3 text-2xl sm:text-3xl font-black text-slate-900">
+                {{ products_count }}
+            </div>
+            <div class="mt-1 text-xs text-slate-500">
+                Productos publicados
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                <span>Equipo de Tienda</span>
+                <i class="fa-solid fa-users text-amber-500 text-base"></i>
+            </div>
+            <div class="mt-3 text-2xl sm:text-3xl font-black text-slate-900">
+                {{ users_count }}
+            </div>
+            <div class="mt-1 text-xs text-amber-600 font-semibold">
+                <a href="{% url 'tenant_admin_users' slug=tenant.slug %}" class="hover:underline">Gestionar usuarios &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid for Orders and Low Stock -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Recent Orders (2 cols) -->
+        <div class="lg:col-span-2 bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Últimos Pedidos Recibidos</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Pedidos realizados por clientes en esta tienda.</p>
+                </div>
+                <a href="{% url 'tenant_admin_orders' slug=tenant.slug %}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                    Ver todos &rarr;
+                </a>
+            </div>
+
+            {% if recent_orders %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-600">
+                    <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                        <tr>
+                            <th class="py-3 px-6">ID Pedido</th>
+                            <th class="py-3 px-6">Cliente</th>
+                            <th class="py-3 px-6">Fecha</th>
+                            <th class="py-3 px-6 text-right">Monto</th>
+                            <th class="py-3 px-6 text-center">Estado</th>
+                            <th class="py-3 px-6 text-right">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for ord in recent_orders %}
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <td class="py-3.5 px-6 font-mono font-bold text-indigo-600">#{{ ord.id }}</td>
+                            <td class="py-3.5 px-6 font-semibold text-slate-800">{{ ord.customer_name }}</td>
+                            <td class="py-3.5 px-6 text-slate-400">{{ ord.created_at|date:"d M Y" }}</td>
+                            <td class="py-3.5 px-6 text-right font-black text-slate-900">{{ tenant.currency_symbol }}{{ ord.total_amount }}</td>
+                            <td class="py-3.5 px-6 text-center">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                    {% if ord.status == 'PENDING' %}bg-amber-100 text-amber-800
+                                    {% elif ord.status == 'PAID' %}bg-emerald-100 text-emerald-800
+                                    {% elif ord.status == 'DELIVERED' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-slate-100 text-slate-800{% endif %}">
+                                    {{ ord.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-6 text-right">
+                                <a href="{% url 'tenant_admin_order_detail' slug=tenant.slug order_id=ord.id %}" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition-colors">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-8 text-center text-slate-400 text-xs">
+                <i class="fa-solid fa-receipt text-3xl mb-2 text-slate-300"></i>
+                <p>No se han registrado pedidos en esta tienda aún.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Low Stock / Action Center (1 col) -->
+        <div class="space-y-6">
+            <!-- Stock Alerts -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Alerta de Inventario Bajo
+                    </h3>
+                </div>
+
+                {% if low_stock_products %}
+                <div class="space-y-3">
+                    {% for p in low_stock_products %}
+                    <div class="flex items-center justify-between gap-3 text-xs p-2 rounded-xl hover:bg-slate-50">
+                        <div class="flex items-center gap-2.5 overflow-hidden">
+                            <div class="w-8 h-8 rounded-lg bg-slate-100 flex-shrink-0 overflow-hidden">
+                                {% if p.image_url %}
+                                <img src="{{ p.image_url }}" alt="{{ p.name }}" class="w-full h-full object-cover">
+                                {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-slate-400 text-xs"><i class="fa-solid fa-box"></i></div>
+                                {% endif %}
+                            </div>
+                            <span class="font-semibold text-slate-800 truncate">{{ p.name }}</span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-lg text-[11px] font-black {% if p.stock == 0 %}bg-rose-100 text-rose-700{% else %}bg-amber-100 text-amber-800{% endif %}">
+                            {{ p.stock }} unid.
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-xs text-slate-400 text-center py-4">
+                    <i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i> Todo el inventario está en niveles óptimos.
+                </p>
+                {% endif %}
+            </div>
+
+            <!-- Quick Store Info Card -->
+            <div class="bg-slate-900 text-white p-6 rounded-3xl shadow-lg space-y-3 text-xs">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Datos Rápidos del Tenant</span>
+                <div class="space-y-1.5 text-slate-300">
+                    <div class="flex justify-between">
+                        <span>Slug:</span>
+                        <span class="font-mono text-indigo-300">{{ tenant.slug }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Moneda:</span>
+                        <span class="font-bold text-white">{{ tenant.currency_symbol }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Color Primario:</span>
+                        <span class="flex items-center gap-1 font-mono">
+                            <span class="w-3 h-3 rounded-full" style="background-color: {{ tenant.primary_color }};"></span>
+                            {{ tenant.primary_color }}
+                        </span>
+                    </div>
+                </div>
+                <div class="pt-3 border-t border-slate-800">
+                    <a href="{% url 'tenant_admin_settings' slug=tenant.slug %}" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+                        <i class="fa-solid fa-pen-to-square"></i> Editar Configuración &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

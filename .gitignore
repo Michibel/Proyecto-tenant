@@ -1,0 +1,30 @@
+# Entornos virtuales
+env/
+venv/
+ENV/
+.env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# SQLite (descomentar si no se desea incluir la BD de prueba)
+# db.sqlite3
+# *.sqlite3

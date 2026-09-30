@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tenant.name }} | Tienda Online{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --primary: {{ tenant.primary_color|default:"#4F46E5" }};
+        --secondary: {{ tenant.secondary_color|default:"#06B6D4" }};
+    }
+    .bg-tenant-primary { background-color: var(--primary); }
+    .text-tenant-primary { color: var(--primary); }
+    .border-tenant-primary { border-color: var(--primary); }
+    .hover\:bg-tenant-primary:hover { background-color: var(--primary); }
+    .focus\:ring-tenant-primary:focus { --tw-ring-color: var(--primary); }
+</style>
+{% endblock %}
+
+{% block layout %}
+<div class="min-h-full flex flex-col bg-slate-50">
+    
+    <!-- Top Announcement Bar -->
+    <div class="py-1.5 px-4 text-center text-xs font-semibold text-white transition-colors" style="background-color: {{ tenant.primary_color }};">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <span class="hidden sm:inline">Envío disponible para todo el país • Compras 100% seguras</span>
+            <span class="mx-auto sm:mx-0">Tienda Oficial: <strong>{{ tenant.name }}</strong></span>
+            {% if user_is_admin %}
+            <a href="{% url 'tenant_admin_dashboard' slug=tenant.slug %}" class="bg-white/20 hover:bg-white/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all">
+                <i class="fa-solid fa-gear mr-1"></i> Admin de Tienda
+            </a>
+            {% else %}
+            <span class="hidden sm:inline text-[11px] opacity-80">{{ tenant.contact_phone }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            
+            <!-- Store Logo & Name -->
+            <a href="{% url 'storefront_view' slug=tenant.slug %}" class="flex items-center gap-3 group">
+                {% if tenant.logo_url %}
+                <img src="{{ tenant.logo_url }}" alt="{{ tenant.name }}" class="w-12 h-12 rounded-2xl object-cover shadow-sm">
+                {% else %}
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-md transition-transform group-hover:scale-105" style="background: linear-gradient(135deg, {{ tenant.primary_color }}, {{ tenant.secondary_color }});">
+                    {{ tenant.name|slice:":1" }}
+                </div>
+                {% endif %}
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight group-hover:text-indigo-600 transition-colors leading-tight">{{ tenant.name }}</h2>
+                    <span class="text-xs text-slate-400 font-medium">Tienda en Línea</span>
+                </div>
+            </a>
+
+            <!-- Search Bar -->
+            <form action="{% url 'storefront_view' slug=tenant.slug %}" method="GET" class="hidden md:flex flex-1 max-w-md mx-6">
+                <div class="relative w-full">
+                    <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Buscar productos en {{ tenant.name }}..." 
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-100 border-none rounded-2xl text-sm focus:outline-none focus:ring-2 focus:bg-white transition-all focus:ring-indigo-500">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                </div>
+            </form>
+
+            <!-- User and Cart Actions -->
+            <div class="flex items-center gap-3">
+                <a href="{% url 'home' %}" class="hidden lg:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors" title="Ver todas las tiendas">
+                    <i class="fa-solid fa-house"></i> Plataforma
+                </a>
+
+                <!-- Cart Button with Live Counter -->
+                <a href="{% url 'cart_view' slug=tenant.slug %}" class="relative inline-flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-white font-bold text-sm shadow-md transition-all transform hover:scale-105" style="background-color: {{ tenant.primary_color }};">
+                    <i class="fa-solid fa-cart-shopping text-base"></i>
+                    <span class="hidden sm:inline">Carrito</span>
+                    <span id="cart-counter" class="w-6 h-6 rounded-full bg-white text-slate-900 flex items-center justify-center text-xs font-black shadow-inner">
+                        {{ cart.total_items|default:0 }}
+                    </span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="flex-1">
+        {% block store_content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold" style="background-color: {{ tenant.primary_color }};">
+                            {{ tenant.name|slice:":1" }}
+                        </div>
+                        <span class="text-lg font-bold text-slate-900">{{ tenant.name }}</span>
+                    </div>
+                    <p class="text-sm text-slate-500 max-w-sm">
+                        {{ tenant.description|default:"Bienvenido a nuestra tienda. Compra de forma segura y recibe tus productos directo en tu puerta." }}
+                    </p>
+                    <div class="mt-4 text-xs text-slate-400">
+                        Carrito y tienda operando de manera 100% aislada.
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">Contacto</h4>
+                    <ul class="space-y-2 text-sm text-slate-600">
+                        {% if tenant.contact_email %}
+                        <li><i class="fa-solid fa-envelope mr-2 text-slate-400"></i> {{ tenant.contact_email }}</li>
+                        {% endif %}
+                        {% if tenant.contact_phone %}
+                        <li><i class="fa-solid fa-phone mr-2 text-slate-400"></i> {{ tenant.contact_phone }}</li>
+                        {% endif %}
+                        <li><i class="fa-solid fa-coins mr-2 text-slate-400"></i> Moneda: {{ tenant.currency_symbol }}</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3">Administración</h4>
+                    <ul class="space-y-2 text-sm text-slate-600">
+                        <li>
+                            <a href="{% url 'tenant_admin_dashboard' slug=tenant.slug %}" class="hover:text-indigo-600 transition-colors flex items-center gap-2">
+                                <i class="fa-solid fa-gear text-slate-400"></i> Panel de Control del Negocio
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'home' %}" class="hover:text-indigo-600 transition-colors flex items-center gap-2">
+                                <i class="fa-solid fa-store text-slate-400"></i> Otras Tiendas
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-12 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400">
+                <p>&copy; 2026 {{ tenant.name }}. Desarrollado con Django Multi-Tenant Engine.</p>
+                <p class="mt-2 sm:mt-0 font-mono">Tenant Slug: {{ tenant.slug }}</p>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<!-- AJAX Add to Cart Script -->
+<script>
+    function quickAddToCart(productId, event) {
+        if (event) event.preventDefault();
+        
+        const url = `/store/{{ tenant.slug }}/cart/add/${productId}/`;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update badge
+                const counter = document.getElementById('cart-counter');
+                if (counter) counter.innerText = data.cart_total_items;
+
+                // Create a brief floating notification
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-semibold animate-bounce';
+                toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i> Producto añadido al carrito`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2500);
+            }
+        })
+        .catch(err => {
+            console.error('Error adding to cart:', err);
+            window.location.href = `/store/{{ tenant.slug }}/cart/`;
+        });
+    }
+</script>
+{% endblock %}

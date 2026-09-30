@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Panel SuperAdmin | MultiTenant SaaS{% endblock %}
+
+{% block layout %}
+<div class="min-h-full bg-slate-900 text-slate-100 flex flex-col">
+    <!-- SuperAdmin Header -->
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="{% url 'home' %}" class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mr-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-indigo-600 flex items-center justify-center text-slate-950 font-black shadow-md">
+                    <i class="fa-solid fa-crown text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                        SuperAdmin Master Panel
+                        <span class="text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full uppercase">Plataforma</span>
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="/admin/" target="_blank" class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition-colors">
+                    <i class="fa-solid fa-sliders mr-1"></i> Django Admin
+                </a>
+                <a href="/api/" target="_blank" class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition-colors">
+                    <i class="fa-solid fa-code mr-1"></i> API REST
+                </a>
+                <span class="text-xs text-slate-400 font-medium hidden sm:inline">Hola, {{ request.user.username }}</span>
+                <a href="{% url 'logout' %}" class="text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 px-3 py-2 rounded-lg border border-rose-500/20 transition-colors">
+                    <i class="fa-solid fa-power-off"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- Welcome & Fast CTA -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-950 p-6 rounded-3xl border border-indigo-900/50 shadow-2xl relative overflow-hidden">
+            <div class="relative z-10">
+                <h2 class="text-2xl font-black text-white">Centro de Control de Inquilinos (Tenants)</h2>
+                <p class="text-sm text-slate-400 mt-1 max-w-2xl">
+                    Administra todas las tiendas creadas en la plataforma, monitorea sus ventas y crea nuevos tenants con administradores independientes en segundos.
+                </p>
+            </div>
+            <div class="relative z-10 flex-shrink-0">
+                <button onclick="document.getElementById('createTenantModal').classList.remove('hidden')" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-slate-950 bg-gradient-to-r from-amber-300 to-amber-400 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-400/20 transition-all transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Crear Nueva Tienda (Tenant)
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 shadow-lg">
+                <div class="flex items-center justify-between text-indigo-400 text-sm">
+                    <span class="font-semibold">Total Tenants</span>
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <div class="mt-3 text-3xl font-extrabold text-white">{{ total_tenants }}</div>
+                <div class="mt-1 text-xs text-slate-400">{{ active_tenants }} activas</div>
+            </div>
+
+            <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 shadow-lg">
+                <div class="flex items-center justify-between text-emerald-400 text-sm">
+                    <span class="font-semibold">Ventas Globales</span>
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div class="mt-3 text-3xl font-extrabold text-emerald-400">${{ total_revenue|floatformat:2 }}</div>
+                <div class="mt-1 text-xs text-slate-400">Total en toda la plataforma</div>
+            </div>
+
+            <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 shadow-lg">
+                <div class="flex items-center justify-between text-violet-400 text-sm">
+                    <span class="font-semibold">Productos Totales</span>
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </div>
+                <div class="mt-3 text-3xl font-extrabold text-white">{{ total_products }}</div>
+                <div class="mt-1 text-xs text-slate-400">En todos los catálogos</div>
+            </div>
+
+            <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 shadow-lg">
+                <div class="flex items-center justify-between text-sky-400 text-sm">
+                    <span class="font-semibold">Órdenes Totales</span>
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <div class="mt-3 text-3xl font-extrabold text-white">{{ total_orders }}</div>
+                <div class="mt-1 text-xs text-slate-400">Pedidos procesados</div>
+            </div>
+
+            <div class="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 shadow-lg col-span-2 md:col-span-1">
+                <div class="flex items-center justify-between text-amber-400 text-sm">
+                    <span class="font-semibold">Usuarios Totales</span>
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div class="mt-3 text-3xl font-extrabold text-white">{{ total_users }}</div>
+                <div class="mt-1 text-xs text-slate-400">Superadmin y store admins</div>
+            </div>
+        </div>
+
+        <!-- Tenants List Section -->
+        <div class="bg-slate-800/70 rounded-3xl border border-slate-700/60 overflow-hidden shadow-xl">
+            <div class="p-6 border-b border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-indigo-400"></i> Listado de Tiendas Registradas
+                    </h3>
+                    <p class="text-xs text-slate-400 mt-1">Supervisa y entra directamente al storefront o al panel de administración de cada negocio.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-semibold bg-slate-900/80 text-slate-400 px-3 py-1.5 rounded-xl border border-slate-700">
+                        {{ tenants|length }} tiendas totales
+                    </span>
+                </div>
+            </div>
+
+            {% if tenants %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900/60 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-700">
+                        <tr>
+                            <th class="py-4 px-6">Tienda / Tenant</th>
+                            <th class="py-4 px-6">Administrador Asignado</th>
+                            <th class="py-4 px-6 text-center">Catálogo</th>
+                            <th class="py-4 px-6 text-right">Ventas</th>
+                            <th class="py-4 px-6 text-center">Estado</th>
+                            <th class="py-4 px-6 text-right">Acciones de SuperAdmin</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700/60">
+                        {% for t in tenants %}
+                        <tr class="hover:bg-slate-700/30 transition-colors">
+                            <td class="py-4 px-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white shadow-inner" style="background-color: {{ t.primary_color }};">
+                                        {{ t.name|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-white text-base flex items-center gap-2">
+                                            {{ t.name }}
+                                            <span class="w-2.5 h-2.5 rounded-full" style="background-color: {{ t.primary_color }};" title="Color de marca"></span>
+                                        </div>
+                                        <span class="text-xs font-mono text-indigo-400">/store/{{ t.slug }}/</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6">
+                                {% if t.owner %}
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-xs text-amber-300 font-bold">
+                                        <i class="fa-solid fa-user-shield text-[10px]"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-slate-200">{{ t.owner.username }}</div>
+                                        <div class="text-[11px] text-slate-400">{{ t.owner.email|default:"Sin email" }}</div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="text-xs text-slate-500 italic">Sin admin asignado</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-6 text-center">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-900 border border-slate-700 text-slate-300">
+                                    <i class="fa-solid fa-box mr-1 text-indigo-400"></i> {{ t.total_products }} prods
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-right font-mono font-bold text-emerald-400">
+                                ${{ t.total_sales|floatformat:2 }}
+                            </td>
+                            <td class="py-4 px-6 text-center">
+                                {% if t.is_active %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span> Activa
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-400 mr-1.5"></span> Suspendida
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <!-- Ver Tienda -->
+                                    <a href="{% url 'storefront_view' slug=t.slug %}" target="_blank" class="p-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 hover:text-white transition-colors" title="Abrir Tienda (Storefront)">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                    </a>
+                                    <!-- Entrar a Admin de la tienda -->
+                                    <a href="{% url 'tenant_admin_dashboard' slug=t.slug %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold transition-colors" title="Panel de Administración del Negocio">
+                                        <i class="fa-solid fa-gear text-amber-300"></i> Admin Tienda
+                                    </a>
+                                    <!-- Toggle Estado -->
+                                    <a href="{% url 'superadmin_tenant_toggle' slug=t.slug %}" class="p-2 rounded-lg {% if t.is_active %}bg-amber-500/10 hover:bg-amber-500/20 text-amber-400{% else %}bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400{% endif %} transition-colors" title="{% if t.is_active %}Suspender Tienda{% else %}Activar Tienda{% endif %}">
+                                        <i class="fa-solid {% if t.is_active %}fa-pause{% else %}fa-play{% endif %}"></i>
+                                    </a>
+                                    <!-- Eliminar -->
+                                    <a href="{% url 'superadmin_tenant_delete' slug=t.slug %}" onclick="return confirm('¿Seguro que deseas eliminar la tienda {{ t.name }}? Esta acción borrará todos sus productos y pedidos permanentemente.')" class="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/30 text-rose-400 hover:text-rose-200 transition-colors" title="Eliminar Tenant">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-12 text-slate-400">
+                <i class="fa-solid fa-store-slash text-4xl mb-3 text-slate-600"></i>
+                <p>No hay tiendas creadas aún en el sistema.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Database Migration Info Banner -->
+        <div class="p-6 rounded-3xl bg-slate-800/40 border border-slate-700/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xl flex-shrink-0">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white text-sm">Estado de la Base de Datos: SQLite Activa</h4>
+                    <p class="text-xs text-slate-400 mt-0.5">El proyecto está configurado con modelos relacionales Django ORM limpios. Para migrar a PostgreSQL en producción solo define las variables de entorno <code class="bg-slate-900 px-1.5 py-0.5 rounded text-indigo-300">DB_ENGINE=postgresql</code> y las credenciales correspondientes sin tocar el código.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal: Plantilla de Creación de Tenant -->
+<div id="createTenantModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative text-slate-100">
+        <!-- Close Button -->
+        <button onclick="document.getElementById('createTenantModal').classList.add('hidden')" class="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 to-indigo-600 flex items-center justify-center text-slate-950 text-xl font-bold shadow-lg">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-extrabold text-white">Asistente de Creación de Tenant</h3>
+                <p class="text-xs text-slate-400">Genera una tienda completa con su administrador y catálogo inicial.</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'superadmin_tenant_create' %}" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Nombre de la tienda -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Nombre Comercial de la Tienda</label>
+                    <input type="text" name="name" id="tenant_name" required placeholder="ej: Sneakers Republic"
+                        class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <!-- Slug -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Identificador URL (Slug)</label>
+                    <input type="text" name="slug" id="tenant_slug" required placeholder="ej: sneakers-republic"
+                        class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-indigo-300 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <!-- Descripción -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Descripción / Eslogan</label>
+                <textarea name="description" rows="2" placeholder="La mejor tienda de zapatillas urbanas y deportivas..."
+                    class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+
+            <!-- Colores de marca y moneda -->
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Color Primario</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="primary_color" value="#4F46E5" class="h-10 w-16 bg-slate-800 border border-slate-700 rounded-lg p-1 cursor-pointer">
+                        <span class="text-xs text-slate-400 font-mono">Marca</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Color Secundario</label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" name="secondary_color" value="#06B6D4" class="h-10 w-16 bg-slate-800 border border-slate-700 rounded-lg p-1 cursor-pointer">
+                        <span class="text-xs text-slate-400 font-mono">Acento</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Moneda</label>
+                    <input type="text" name="currency_symbol" value="$" class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <!-- Sección Administrador del Negocio -->
+            <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-3">
+                <div class="flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
+                    <i class="fa-solid fa-user-shield"></i> Cuenta del Administrador de la Tienda
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Usuario Admin</label>
+                        <input type="text" name="admin_username" required placeholder="admin_tienda" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Email</label>
+                        <input type="email" name="admin_email" required placeholder="admin@tienda.com" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Contraseña Inicial</label>
+                        <input type="password" name="admin_password" required placeholder="••••••••" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plantilla de Catálogo -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Plantilla de Catálogo Inicial</label>
+                <select name="catalog_template" class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:ring-2 focus:ring-indigo-500">
+                    <option value="fashion">Boutique de Moda, Ropa & Accesorios (5 productos listos)</option>
+                    <option value="tech">Tecnología, Audio & Laptops (6 productos listos)</option>
+                    <option value="sneakers">Zapatillas & Sneakers Urbanas (4 productos listos)</option>
+                    <option value="empty">Comenzar vacío (Sin productos)</option>
+                </select>
+                <p class="text-[11px] text-slate-400 mt-1">Crea automáticamente categorías y productos listos para comprar y probar el carrito independiente.</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+                <button type="button" onclick="document.getElementById('createTenantModal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors text-sm">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl font-bold text-slate-950 bg-gradient-to-r from-amber-300 to-amber-400 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-400/20 text-sm transition-all">
+                    <i class="fa-solid fa-check mr-1.5"></i> Crear Tienda Inmediatamente
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Auto-generar slug en el modal
+    const nameInput = document.getElementById('tenant_name');
+    const slugInput = document.getElementById('tenant_slug');
+    if (nameInput && slugInput) {
+        nameInput.addEventListener('input', function() {
+            slugInput.value = this.value
+                .toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/[\s_-]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        });
+    }
+</script>
+{% endblock %}

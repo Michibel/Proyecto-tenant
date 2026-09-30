@@ -1,0 +1,137 @@
+{% extends "storefront/base_store.html" %}
+
+{% block title %}Mi Carrito de Compra | {{ tenant.name }}{% endblock %}
+
+{% block store_content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex items-center justify-between pb-6 border-b border-slate-200">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                <i class="fa-solid fa-basket-shopping text-indigo-600"></i> Tu Carrito de Compra
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                Carrito independiente y exclusivo para la tienda <strong>{{ tenant.name }}</strong>.
+            </p>
+        </div>
+        <a href="{% url 'storefront_view' slug=tenant.slug %}" class="text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+            <i class="fa-solid fa-arrow-left"></i> Seguir Comprando
+        </a>
+    </div>
+
+    {% if cart.items %}
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Cart Items Table / List -->
+        <div class="lg:col-span-2 space-y-4">
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="divide-y divide-slate-100">
+                    {% for item in cart.items %}
+                    <div class="p-6 flex flex-col sm:flex-row items-center gap-6 hover:bg-slate-50/50 transition-colors">
+                        <!-- Product Thumbnail -->
+                        <div class="w-20 h-20 rounded-2xl bg-slate-100 overflow-hidden flex-shrink-0 shadow-inner">
+                            {% if item.image_url %}
+                            <img src="{{ item.image_url }}" alt="{{ item.name }}" class="w-full h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center text-slate-400">
+                                <i class="fa-solid fa-image"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Info -->
+                        <div class="flex-1 text-center sm:text-left">
+                            <h3 class="font-bold text-slate-900 text-base">{{ item.name }}</h3>
+                            <div class="text-xs text-slate-500 mt-1">Precio Unitario: <span class="font-semibold text-slate-700">{{ tenant.currency_symbol }}{{ item.price }}</span></div>
+                        </div>
+
+                        <!-- Quantity Selector Form -->
+                        <div class="flex items-center gap-3">
+                            <form action="{% url 'cart_update' slug=tenant.slug product_id=item.product_id %}" method="POST" class="flex items-center border border-slate-300 rounded-xl bg-slate-50 p-1">
+                                {% csrf_token %}
+                                <button type="submit" name="quantity" value="{{ item.quantity|add:-1 }}" class="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg transition-colors font-bold text-sm">
+                                    -
+                                </button>
+                                <span class="w-8 text-center text-xs font-black text-slate-900">{{ item.quantity }}</span>
+                                <button type="submit" name="quantity" value="{{ item.quantity|add:1 }}" class="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg transition-colors font-bold text-sm">
+                                    +
+                                </button>
+                            </form>
+
+                            <!-- Subtotal -->
+                            <div class="text-right w-24">
+                                <span class="block text-sm font-black text-slate-900">{{ tenant.currency_symbol }}{{ item.subtotal }}</span>
+                            </div>
+
+                            <!-- Remove Button -->
+                            <a href="{% url 'cart_remove' slug=tenant.slug product_id=item.product_id %}" 
+                                class="p-2 text-slate-400 hover:text-rose-600 transition-colors" title="Eliminar ítem">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Assurance Callouts -->
+            <div class="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex items-center gap-3 text-xs text-indigo-900">
+                <i class="fa-solid fa-circle-info text-indigo-600 text-base"></i>
+                <span>Tus artículos están guardados en tu sesión para <strong>{{ tenant.name }}</strong>. Si agregas productos en otra tienda, se gestionarán en su propio carrito independiente.</span>
+            </div>
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <div class="lg:col-span-1">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-md space-y-6 sticky top-28">
+                <h2 class="text-lg font-extrabold text-slate-900 tracking-tight pb-3 border-b border-slate-100">
+                    Resumen del Pedido
+                </h2>
+
+                <div class="space-y-3 text-sm text-slate-600">
+                    <div class="flex justify-between">
+                        <span>Artículos ({{ cart.total_items }})</span>
+                        <span class="font-bold text-slate-900">{{ tenant.currency_symbol }}{{ cart.total_amount }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Envío</span>
+                        <span class="text-emerald-600 font-bold">¡Gratis!</span>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex justify-between items-baseline">
+                        <span class="text-base font-bold text-slate-900">Total a Pagar</span>
+                        <span class="text-2xl font-black text-slate-900" style="color: {{ tenant.primary_color }};">
+                            {{ tenant.currency_symbol }}{{ cart.total_amount }}
+                        </span>
+                    </div>
+                </div>
+
+                <a href="{% url 'checkout_view' slug=tenant.slug %}" class="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-2xl text-white font-bold text-sm shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0" style="background-color: {{ tenant.primary_color }};">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Continuar al Pago Seguro</span>
+                </a>
+
+                <div class="text-center">
+                    <span class="text-[11px] text-slate-400 font-medium flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved text-emerald-500"></i> Checkout Encriptado y Seguro
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% else %}
+    <!-- Empty Cart Screen -->
+    <div class="text-center py-24 bg-white rounded-3xl border border-dashed border-slate-300 max-w-lg mx-auto p-8 my-10">
+        <div class="w-20 h-20 mx-auto rounded-3xl bg-slate-100 flex items-center justify-center text-slate-400 text-3xl mb-4">
+            <i class="fa-solid fa-cart-arrow-down"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">Tu carrito está vacío</h2>
+        <p class="text-xs text-slate-500 mt-2 max-w-xs mx-auto">
+            Explora el catálogo de {{ tenant.name }} y agrega los productos que más te gusten.
+        </p>
+        <a href="{% url 'storefront_view' slug=tenant.slug %}" class="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-white text-xs shadow-md transition-all" style="background-color: {{ tenant.primary_color }};">
+            <i class="fa-solid fa-arrow-left"></i> Explorar Catálogo
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

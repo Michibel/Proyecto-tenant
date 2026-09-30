@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión | MultiTenant SaaS{% endblock %}
+
+{% block layout %}
+<div class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl border border-slate-200 shadow-xl">
+        <div class="text-center">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-2xl shadow-lg shadow-indigo-200">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 class="mt-4 text-2xl font-extrabold text-slate-900 tracking-tight">Acceso a la Plataforma</h2>
+            <p class="mt-2 text-sm text-slate-500">
+                Ingresa con tu cuenta de <strong>SuperAdmin</strong> o como <strong>Administrador de Tienda</strong>.
+            </p>
+        </div>
+
+        <form class="mt-8 space-y-6" method="POST" action="{% url 'login' %}{% if next %}?next={{ next }}{% endif %}">
+            {% csrf_token %}
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="id_username" class="block text-sm font-semibold text-slate-700 mb-1">Nombre de Usuario</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input id="id_username" name="username" type="text" required autofocus
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm"
+                            placeholder="tu_usuario">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_password" class="block text-sm font-semibold text-slate-700 mb-1">Contraseña</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-key"></i>
+                        </span>
+                        <input id="id_password" name="password" type="password" required
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-sm"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg shadow-indigo-200 transition-all">
+                    <i class="fa-solid fa-right-to-bracket"></i> Entrar al Panel
+                </button>
+            </div>
+
+            <div class="text-center pt-2">
+                <a href="{% url 'home' %}" class="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Volver a la página principal
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

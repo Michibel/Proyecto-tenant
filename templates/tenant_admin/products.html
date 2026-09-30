@@ -1,0 +1,118 @@
+{% extends "tenant_admin/base_tenant_admin.html" %}
+
+{% block page_title %}Catálogo de Productos | {{ tenant.name }}{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    
+    <!-- Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-boxes-stacked text-indigo-600"></i> Catálogo de Productos
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Gestiona el inventario, precios y disponibilidad de tu tienda.</p>
+        </div>
+
+        <a href="{% url 'tenant_admin_product_create' slug=tenant.slug %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all">
+            <i class="fa-solid fa-plus"></i> Añadir Nuevo Producto
+        </a>
+    </div>
+
+    <!-- Products Table -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Productos Registrados ({{ products|length }})</span>
+        </div>
+
+        {% if products %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                    <tr>
+                        <th class="py-4 px-6">Producto</th>
+                        <th class="py-4 px-6">Categoría</th>
+                        <th class="py-4 px-6 text-right">Precio</th>
+                        <th class="py-4 px-6 text-center">Stock</th>
+                        <th class="py-4 px-6 text-center">Estado</th>
+                        <th class="py-4 px-6 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for p in products %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 shadow-inner">
+                                    {% if p.image_url %}
+                                    <img src="{{ p.image_url }}" alt="{{ p.name }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-slate-300"><i class="fa-solid fa-image"></i></div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <span class="font-bold text-slate-900 block text-sm">{{ p.name }}</span>
+                                    {% if p.badge %}
+                                    <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
+                                        {{ p.badge }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 font-semibold text-slate-700">
+                            {{ p.category.name|default:"General" }}
+                        </td>
+                        <td class="py-4 px-6 text-right font-black text-slate-900 text-sm">
+                            {{ tenant.currency_symbol }}{{ p.price }}
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-black
+                                {% if p.stock > 5 %}bg-emerald-100 text-emerald-800
+                                {% elif p.stock > 0 %}bg-amber-100 text-amber-800
+                                {% else %}bg-rose-100 text-rose-800{% endif %}">
+                                {{ p.stock }} unid.
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            {% if p.is_active %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Visible
+                            </span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
+                                Oculto
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <a href="{% url 'storefront_product_detail' slug=tenant.slug product_slug=p.slug %}" target="_blank" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Ver en tienda">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                </a>
+                                <a href="{% url 'tenant_admin_product_edit' slug=tenant.slug product_id=p.id %}" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Editar">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <a href="{% url 'tenant_admin_product_delete' slug=tenant.slug product_id=p.id %}" onclick="return confirm('¿Eliminar producto {{ p.name }}?')" class="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors" title="Eliminar">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-16 text-slate-400">
+            <i class="fa-solid fa-box-open text-4xl mb-3 text-slate-300"></i>
+            <p>No hay productos en esta tienda.</p>
+            <a href="{% url 'tenant_admin_product_create' slug=tenant.slug %}" class="mt-4 inline-block text-xs font-bold text-indigo-600 hover:underline">
+                Crear tu primer producto &rarr;
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
